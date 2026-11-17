@@ -1,66 +1,140 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SIAP Jember — Sistem Informasi Administrasi & Penilaian Mitra Statistik 2027
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/img/brand/siap-logo.svg" width="120" alt="Logo SIAP Jember">
+  <br>
+  <strong>BPS Kabupaten Jember</strong>
+  <br>
+  <em>"Siap Menjadi Mitra Statistik Terbaik"</em>
 </p>
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📌 Tentang Aplikasi
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**SIAP Jember** (*Sistem Informasi Administrasi & Penilaian*) adalah aplikasi web internal dengan **sistem tertutup** yang dirancang khusus untuk mengelola rangkaian seleksi calon mitra statistik Keputusan Kepala BPS Tahun 2027 di lingkungan **Badan Pusat Statistik (BPS) Kabupaten Jember**.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Aplikasi ini mengotomatiskan seluruh alur seleksi dari data master mitra, pemanggilan peserta terpilih, pembagian tugas panitia & jadwal wawancara, konfirmasi kehadiran (RSVP), pengunggahan berkas administrasi (CV), penilaian wawancara multi-aspek dengan rubrik otomatis, hingga penetapan kelulusan dan pengumuman hasil.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🚀 Fitur Utama
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 1. 🔒 Sistem Tertutup & Keamanan Akun
+- **Tanpa Registrasi Publik:** Akses sistem hanya dibuka bagi akun mitra hasil import Excel resmi BPS serta panitia/pewawancara yang ditugaskan.
+- **Wajib Ganti Password Awal:** Akun mitra baru menggunakan kata sandi awal `sobat_id` dan diwajibkan mengganti password saat pertama kali login via middleware `MustChangePassword`.
+- **Proteksi Berkas Privat:** Berkas CV peserta dan dokumen penyelenggaraan (daftar hadir, dokumentasi, SK) disimpan secara privat di `storage/app/private/...` dan diakses melalui verifikasi hak akses ketat.
+- **Keamanan Tambahan:** Dilengkapi rate limiting (`throttle`) pada endpoint login/reset password serta validasi ketat tipe MIME/ekstensi file upload.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 2. 👥 4 Peran Pengguna (RBAC)
+- `superadmin`: Akses penuh ke seluruh fitur dan pengaturan, termasuk hak *override* nilai wawancara.
+- `operator`: Manajemen teknis seleksi — import data master mitra, peserta terpilih per kegiatan aktif, penugasan panitia (`/tugas`), penjadwalan wawancara (`/jadwal`), arsip berkas penyelenggaraan, dan publikasi pengumuman kelulusan.
+- `pewawancara`: Akses jadwal wawancara miliknya, profil & CV peserta yang diuji, serta form input nilai multi-aspek.
+- `peserta`: Calon mitra terpilih yang dapat melihat surat pemanggilan seleksi (undangan), konfirmasi kehadiran (RSVP), melihat jadwal tes, mengunggah CV (PDF), dan melihat pengumuman kelulusan saat dipublikasikan.
 
-## Laravel Sponsors
+### 3. 🎯 Penilaian Wawancara Multi-Aspek & Bank Pertanyaan Dinamis
+- 4 aspek penilaian default (bobot masing-masing 25%):
+  1. **Komunikasi**
+  2. **Pengalaman Lapangan**
+  3. **Penguasaan Teknologi / CAPI**
+  4. **Komitmen & Integritas**
+- Mendukung bank pertanyaan dinamis (`binier`, `kategori`, `naratif`) yang secara otomatis mengkalkulasi skor aspek dan nilai akhir berbobot secara real-time via Alpine.js serta divalidasi ulang di sisi server.
+- Setiap kegiatan baru yang ditambahkan otomatis mewarisi 4 kriteria dan 17 pertanyaan default.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 4. 📊 Pengolahan Data Excel Berkinerja Tinggi
+- **Import Master Mitra:** Dioptimalkan dengan *in-memory user preloading* dan transaksi batch per-chunk sehingga mampu memproses ribuan data mitra Kepka tanpa risiko timeout di server hosting.
+- **Import Peserta Terpilih:** Cukup menggunakan satu kolom `Email`.
+- **Import & Kelola Jadwal:** Bersifat *idempotent* (mencegah duplikasi jadwal saat import ulang).
+- **Export Rekap Nilai:** Fitur ekspor Excel lengkap dengan format yang kompatibel langsung untuk pengunggahan hasil kelulusan.
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## 🛠️ Tech Stack & Arsitektur
 
-## Contributing
+- **Backend:** Laravel 11 (PHP 8.2+)
+- **Database:** MariaDB 10.6+ / MySQL 8.0+
+- **Frontend / UI:** Blade + AdminLTE 3.2 (Bootstrap 4.6, FontAwesome 5, jQuery) + Alpine.js
+- **Excel Engine:** `maatwebsite/excel` (PhpSpreadsheet)
+- **Target Deployment:** Apache 2.4 / cPanel Hosting (`bpsjember.com` / subdomain)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 💻 Panduan Instalasi Lokal
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 1. Prasyarat
+- PHP 8.2 atau lebih tinggi dengan ekstensi: `pdo_mysql`, `mbstring`, `fileinfo`, `zip`, `gd`/`imagick`, `xml`
+- Composer 2.x
+- MySQL / MariaDB Server
 
-## Security Vulnerabilities
+### 2. Langkah Pemasangan
+```bash
+# 1. Clone repositori
+git clone https://github.com/nanangpx0-hub/siap-jember.git
+cd siap-jember
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# 2. Pasang dependensi
+composer install
 
-## License
+# 3. Konfigurasi file Environment
+cp .env.example .env
+php artisan key:generate
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Sesuaikan kredensial database di file .env:
+# DB_CONNECTION=mysql
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=rekrutmen_bps_2027
+# DB_USERNAME=root
+# DB_PASSWORD=
+
+# 4. Jalankan migrasi dan seeder awal
+php artisan migrate --seed
+
+# 5. Jalankan server lokal
+php artisan serve
+```
+
+Akses portal di peramban: `http://localhost:8000`
+
+---
+
+## 🔑 Akun Bawaan (Default Seeder)
+
+| Role | Email | Password Awal |
+| :--- | :--- | :--- |
+| **Super Administrator** | `admin@bpsjember.com` | `password` |
+| **Operator** | `operator@bpsjember.com` | `password` |
+
+> ⚠️ **PENTING:** Segera ubah kata sandi akun bawaan setelah login pertama di lingkungan produksi melalui menu **Ganti Password**.
+
+---
+
+## 🧪 Pengujian Otomatis (Automated Tests)
+
+Seluruh modul dan kontrak keamanan diuji menggunakan PHPUnit:
+```bash
+php artisan test
+```
+Cakupan pengujian:
+- **Auth & Access:** Proteksi `/register`, login email, redirect ganti password paksa, `url.intended`.
+- **Role Isolation:** Penolakan akses lintas role (peserta, operator, pewawancara, superadmin).
+- **Data & Privacy Isolation:** Proteksi CV antar-peserta, isolasi jadwal wawancara, perlindungan berkas penyelenggaraan privat.
+- **Business Flow:** Alur seleksi lengkap (RSVP, upload CV, penilaian wawancara, pengumuman hasil).
+- **Management & Import:** Idempotensi import jadwal, pencegahan duplikasi, aktivasi kegiatan, proteksi upload file berbahaya.
+
+---
+
+## 🌐 Dokumentasi Teknis Tambahan
+
+Dokumentasi detail lainnya tersedia pada direktori `docs/`:
+- [docs/SPEC.md](docs/SPEC.md) — Kontrak teknis route, skema database, dan aturan RBAC.
+- [docs/TASKS.md](docs/TASKS.md) — Papan kerja implementasi & riwayat task multi-agent.
+- [docs/DEPLOY_CPANEL.md](docs/DEPLOY_CPANEL.md) — Panduan deployment ke cPanel Jagoan Hosting.
+- [docs/BRANDING.md](docs/BRANDING.md) — Panduan identitas visual dan logo SIAP Jember.
+- [docs/LAN_ACCESS.md](docs/LAN_ACCESS.md) — Panduan konfigurasi akses jaringan lokal (LAN/MikroTik).
+
+---
+
+## 📄 Lisensi
+
+Aplikasi ini dikembangkan untuk keperluan dinas internal **Badan Pusat Statistik Kabupaten Jember**.

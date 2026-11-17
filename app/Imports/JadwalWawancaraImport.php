@@ -12,7 +12,10 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class JadwalWawancaraImport implements ToCollection, WithHeadingRow
 {
-    public array $summary = ['success' => 0, 'skipped' => 0, 'errors' => []];
+    public array $summary = ['success' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []];
+
+    /** @var array<int, int> peserta_seleksi_id => nomor baris */
+    protected array $seenPeserta = [];
 
     public function __construct(protected Kegiatan $kegiatan) {}
 
@@ -21,7 +24,7 @@ class JadwalWawancaraImport implements ToCollection, WithHeadingRow
         $rowNum = 1;
         foreach ($rows as $row) {
             $rowNum++;
-            $r = $row->toArray();
+            $r = $row instanceof Collection ? $row->toArray() : (array) $row;
             $get = function (array $keys) use ($r) {
                 foreach ($keys as $k) {
                     if (array_key_exists($k, $r) && $r[$k] !== null && $r[$k] !== '') {
@@ -45,7 +48,14 @@ class JadwalWawancaraImport implements ToCollection, WithHeadingRow
             if ($sobatPeserta !== '') $pesertaUser = User::where('sobat_id', $sobatPeserta)->first();
             if (!$pesertaUser && $emailPeserta !== '') $pesertaUser = User::where('email', $emailPeserta)->first();
             $peserta = $pesertaUser ? PesertaSeleksi::where('kegiatan_id', $this->kegiatan->id)->where('user_id', $pesertaUser->id)->first() : null;
-            $pew = $emailPew !== '' ? User::where('email', $emailPew)->where('role', 'pewawancara')->first() : null;
+
+            if ($peserta && isset($this->seenPeserta[$peserta->id])) {
+                $this->summary['skipped']++;
+                $this->summary['errors'][] = "Baris {$rowNum}: duplikat peserta dalam file jadwal.";
+                continue;
+            }
+
+            $pew = $emailPew !== '' ? User::where('email', $emailPew)->whereIn('role', ['pewawancara', 'superadmin'])->first() : null;
 
             if (!$peserta || !$pew || !$tanggal || !$jamMulai || !$jamSelesai || !$lokasi) {
                 $this->summary['skipped']++;
@@ -68,19 +78,30 @@ class JadwalWawancaraImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            JadwalWawancara::create([
-                'kegiatan_id' => $this->kegiatan->id,
-                'peserta_seleksi_id' => $peserta->id,
-                'pewawancara_id' => $pew->id,
-                'tanggal' => $tanggal,
-                'jam_mulai' => $jm,
-                'jam_selesai' => $js,
-                'sesi' => (string) $get(['sesi']) ?: null,
-                'metode' => $metode,
-                'lokasi_atau_link' => $lokasi,
-                'catatan_jadwal' => (string) $get(['catatan_jadwal', 'catatan']) ?: null,
-            ]);
-            $this->summary['success']++;
+            $this->seenPeserta[$peserta->id] = $rowNum;
+
+            $jadwal = JadwalWawancara::updateOrCreate(
+                [
+                    'kegiatan_id' => $this->kegiatan->id,
+                    'peserta_seleksi_id' => $peserta->id,
+                ],
+                [
+                    'pewawancara_id' => $pew->id,
+                    'tanggal' => $tanggal,
+                    'jam_mulai' => $jm,
+                    'jam_selesai' => $js,
+                    'sesi' => (string) $get(['sesi']) ?: null,
+                    'metode' => $metode,
+                    'lokasi_atau_link' => $lokasi,
+                    'catatan_jadwal' => (string) $get(['catatan_jadwal', 'catatan']) ?: null,
+                ]
+            );
+
+            if ($jadwal->wasRecentlyCreated) {
+                $this->summary['success']++;
+            } else {
+                $this->summary['updated']++;
+            }
         }
     }
 }

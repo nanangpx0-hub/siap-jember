@@ -43,7 +43,7 @@
             <div class="card-header"><h3 class="card-title">Import Peserta Terpilih (Kegiatan Aktif)</h3></div>
             <div class="card-body">
                 <p class="text-muted small mb-1">Kegiatan aktif: <strong>{{ $kegiatanAktif->nama_kegiatan ?? 'Tidak ada' }}</strong> {{ $kegiatanAktif ? '(' . $kegiatanAktif->tahun . ')' : '' }}</p>
-                <p class="text-muted small">Kolom: <code>SOBAT ID</code> dan/atau <code>Email</code>. Sistem mencocokkan ke <code>users</code> lalu membuat <code>peserta_seleksi</code>.</p>
+                <p class="text-muted small">Cukup kolom <code>Email</code> (SOBAT ID tidak diperlukan). Sistem mencocokkan email ke <code>users</code> lalu membuat <code>peserta_seleksi</code>.</p>
                 <a href="{{ route('operator.mitra.template-peserta') }}" class="btn btn-outline-secondary btn-sm mb-3"><i class="fas fa-download mr-1"></i>Unduh Template Excel Peserta Terpilih</a>
                 <form method="POST" action="{{ route('operator.mitra.import-peserta') }}" enctype="multipart/form-data">
                     @csrf

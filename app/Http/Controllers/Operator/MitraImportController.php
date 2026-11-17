@@ -66,7 +66,7 @@ class MitraImportController extends Controller
     public function importMaster(Request $request): RedirectResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
         ]);
 
         $import = new MitraMasterImport();
@@ -78,7 +78,7 @@ class MitraImportController extends Controller
     public function importPeserta(Request $request): RedirectResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
         ]);
 
         $kegiatan = Kegiatan::where('is_active', true)->orderByDesc('tahun')->first();

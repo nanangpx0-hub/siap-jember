@@ -10,6 +10,7 @@ use App\Models\PesertaSeleksi;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -22,15 +23,15 @@ class JadwalController extends Controller
         $kegiatanId = $request->integer('kegiatan_id') ?: ($kegiatanAktif->id ?? null);
         $kegiatanList = Kegiatan::orderByDesc('tahun')->orderByDesc('id')->get();
 
-        $query = JadwalWawancara::with(['kegiatan', 'pesertaSeleksi.user', 'pewawancara'])
+        $query = JadwalWawancara::with(['kegiatan', 'pesertaSeleksi.user', 'pewawancara', 'penilaian'])
             ->orderBy('tanggal')->orderBy('jam_mulai');
         if ($kegiatanId) $query->where('kegiatan_id', $kegiatanId);
         if ($user->role === 'pewawancara') $query->where('pewawancara_id', $user->id);
 
         $jadwal = $query->paginate(20)->withQueryString();
         $peserta = $kegiatanId ? PesertaSeleksi::with('user')->where('kegiatan_id', $kegiatanId)->get() : collect();
-        $pewawancara = User::where('role', 'pewawancara')->where('is_active', true)->orderBy('name')->get();
-        $canManage = in_array($user->role, ['admin', 'operator'], true);
+        $pewawancara = User::whereIn('role', ['pewawancara', 'superadmin'])->where('is_active', true)->orderBy('name')->get();
+        $canManage = in_array($user->role, ['superadmin', 'operator'], true);
 
         return view('operator.jadwal.index', compact('jadwal','kegiatanList','kegiatanId','kegiatanAktif','peserta','pewawancara','canManage'));
     }
@@ -39,18 +40,30 @@ class JadwalController extends Controller
     {
         $this->authorizeManage($request);
         $data = $request->validate([
-            'kegiatan_id' => ['required','exists:kegiatan,id'],
-            'peserta_seleksi_id' => ['required','exists:peserta_seleksi,id'],
-            'pewawancara_id' => ['required','exists:users,id'],
-            'tanggal' => ['required','date'],
-            'jam_mulai' => ['required'],
-            'jam_selesai' => ['required'],
-            'sesi' => ['nullable','string','max:100'],
-            'metode' => ['required','in:luring,daring'],
-            'lokasi_atau_link' => ['required','string','max:255'],
-            'catatan_jadwal' => ['nullable','string'],
+            'kegiatan_id' => ['required', 'exists:kegiatan,id'],
+            'peserta_seleksi_id' => [
+                'required',
+                Rule::exists('peserta_seleksi', 'id')->where('kegiatan_id', $request->input('kegiatan_id')),
+            ],
+            'pewawancara_id' => [
+                'required',
+                Rule::exists('users', 'id')->where('is_active', true)->whereIn('role', ['pewawancara', 'superadmin']),
+            ],
+            'tanggal' => ['required', 'date'],
+            'jam_mulai' => ['required', 'date_format:H:i'],
+            'jam_selesai' => ['required', 'date_format:H:i', 'after:jam_mulai'],
+            'sesi' => ['nullable', 'string', 'max:100'],
+            'metode' => ['required', 'in:luring,daring'],
+            'lokasi_atau_link' => ['required', 'string', 'max:255'],
+            'catatan_jadwal' => ['nullable', 'string'],
         ]);
-        JadwalWawancara::create($data);
+        JadwalWawancara::updateOrCreate(
+            [
+                'kegiatan_id' => $data['kegiatan_id'],
+                'peserta_seleksi_id' => $data['peserta_seleksi_id'],
+            ],
+            $data
+        );
         return back()->with('status','Jadwal wawancara berhasil ditambahkan.');
     }
 
@@ -64,7 +77,7 @@ class JadwalController extends Controller
     public function import(Request $request): RedirectResponse
     {
         $this->authorizeManage($request);
-        $request->validate(['file' => ['required','file','mimes:xlsx,xls,csv']]);
+        $request->validate(['file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240']]);
         $kegiatan = Kegiatan::where('is_active', true)->orderByDesc('tahun')->first();
         if (!$kegiatan) return back()->withErrors(['file' => 'Tidak ada kegiatan aktif.']);
         $import = new JadwalWawancaraImport($kegiatan);
@@ -80,6 +93,6 @@ class JadwalController extends Controller
 
     protected function authorizeManage(Request $request): void
     {
-        abort_unless(in_array($request->user()->role, ['admin','operator'], true), 403);
+        abort_unless(in_array($request->user()->role, ['superadmin','operator'], true), 403);
     }
 }

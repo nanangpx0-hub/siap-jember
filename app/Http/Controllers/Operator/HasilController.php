@@ -20,13 +20,30 @@ class HasilController extends Controller
         $kegiatanList = Kegiatan::orderByDesc('tahun')->orderByDesc('id')->get();
         $kegiatan = $kegiatanId ? Kegiatan::find($kegiatanId) : $kegiatanAktif;
 
+        $q = trim((string) $request->input('q', ''));
+        $statusHasil = (string) $request->input('status_hasil', '');
+        $statusValid = ['belum_ditentukan', 'lulus', 'tidak_lulus', 'cadangan'];
+
         $peserta = collect();
         if ($kegiatanId) {
-            $peserta = PesertaSeleksi::with([
+            $query = PesertaSeleksi::with([
                 'user.mitraProfile',
                 'jadwalWawancara.penilaian',
                 'jadwalWawancara.pewawancara',
-            ])->where('kegiatan_id', $kegiatanId)->get()->map(function ($p) {
+            ])->where('kegiatan_id', $kegiatanId);
+
+            if ($q !== '') {
+                $query->whereHas('user', function ($uq) use ($q) {
+                    $uq->where('name', 'like', "%{$q}%")
+                        ->orWhere('email', 'like', "%{$q}%")
+                        ->orWhere('sobat_id', 'like', "%{$q}%");
+                });
+            }
+            if (in_array($statusHasil, $statusValid, true)) {
+                $query->where('status_hasil', $statusHasil);
+            }
+
+            $peserta = $query->get()->map(function ($p) {
                 $penilaian = $p->jadwalWawancara->map->penilaian->filter()->sortByDesc('submitted_at')->first();
                 $p->nilai_akhir_view = $penilaian->nilai_akhir ?? null;
                 $p->rekomendasi_view = $penilaian->rekomendasi ?? null;
@@ -40,6 +57,7 @@ class HasilController extends Controller
             'kegiatanList' => $kegiatanList,
             'kegiatanId' => $kegiatanId,
             'kegiatan' => $kegiatan,
+            'filters' => ['q' => $q, 'status_hasil' => $statusHasil],
         ]);
     }
 
@@ -62,7 +80,7 @@ class HasilController extends Controller
 
     public function importHasil(Request $request): RedirectResponse
     {
-        $request->validate(['file' => ['required','file','mimes:xlsx,xls,csv']]);
+        $request->validate(['file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240']]);
         $kegiatan = Kegiatan::where('is_active', true)->orderByDesc('tahun')->first();
         if (!$kegiatan) return back()->withErrors(['file'=>'Tidak ada kegiatan aktif.']);
         $import = new HasilSeleksiImport($kegiatan);
@@ -73,5 +91,14 @@ class HasilController extends Controller
     public function templateHasil(): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
         return Excel::download(new \App\Exports\HasilSeleksiTemplateExport(), 'template_hasil_seleksi.xlsx');
+    }
+
+    public function exportRekap(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $kegiatanAktif = Kegiatan::where('is_active', true)->orderByDesc('tahun')->first();
+        $kegiatanId = $request->integer('kegiatan_id') ?: ($kegiatanAktif->id ?? 0);
+        abort_unless($kegiatanId > 0, 404, 'Kegiatan tidak ditemukan.');
+
+        return Excel::download(new \App\Exports\RekapNilaiExport($kegiatanId), "rekap_nilai_kegiatan_{$kegiatanId}.xlsx");
     }
 }

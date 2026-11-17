@@ -34,7 +34,7 @@ class ChangePasswordController extends Controller
         ])->save();
 
         $target = match ($user->role) {
-            'admin', 'operator' => '/operator/dashboard',
+            'superadmin', 'operator' => '/operator/dashboard',
             'pewawancara' => '/pewawancara/dashboard',
             'peserta' => '/peserta/dashboard',
             default => '/',

@@ -3,7 +3,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="mb-0">Manajemen Jadwal Wawancara (/jadwal)</h3>
-    <a href="{{ route('operator.dashboard') }}" class="btn btn-default btn-sm">Dashboard</a>
+    <a href="{{ route('dashboard') }}" class="btn btn-default btn-sm">Dashboard</a>
 </div>
 
 @if($canManage)
@@ -59,7 +59,7 @@
                 @if(session('import_jadwal_summary'))
                     @php($s = session('import_jadwal_summary'))
                     <div class="alert alert-light border mt-3 mb-0">
-                        <ul class="mb-1 pl-3"><li>Berhasil: {{ $s['success'] }}</li><li>Dilewati: {{ $s['skipped'] }}</li></ul>
+                        <ul class="mb-1 pl-3"><li>Berhasil: {{ $s['success'] }}</li><li>Diperbarui: {{ $s['updated'] ?? 0 }}</li><li>Dilewati: {{ $s['skipped'] }}</li></ul>
                         @if(!empty($s['errors']))<ul class="text-danger small pl-3 mb-0" style="max-height:160px;overflow:auto">@foreach($s['errors'] as $e)<li>{{ $e }}</li>@endforeach</ul>@endif
                     </div>
                 @endif
@@ -93,10 +93,14 @@
                         <td style="word-break:break-all">{{ $j->lokasi_atau_link }}</td>
                         <td>{{ $j->sesi ?? '-' }}</td>
                         <td>
-                            @if(auth()->user()->role === 'admin' || $j->pewawancara_id === auth()->id())
-                                <a href="{{ route('wawancara.edit', $j) }}" class="btn btn-xs btn-outline-primary">Input Nilai</a>
+                            @if($j->penilaian)
+                                <span class="badge badge-success mr-1">{{ $j->penilaian->nilai_akhir }}</span>
                             @else
-                                <span class="text-muted">-</span>
+                                <span class="badge badge-secondary mr-1">Belum dinilai</span>
+                            @endif
+                            @if(auth()->user()->role === 'superadmin' || $j->pewawancara_id === auth()->id())
+                                <a href="{{ route('pewawancara.jadwal.show', $j) }}" class="btn btn-xs btn-outline-info mr-1">Detail &amp; CV</a>
+                                <a href="{{ route('wawancara.edit', $j) }}" class="btn btn-xs btn-outline-primary">Input Nilai</a>
                             @endif
                         </td>
                         @if($canManage)<td><form method="POST" action="{{ route('jadwal.destroy',$j) }}" onsubmit="return confirm('Hapus jadwal?')">@csrf @method('DELETE')<button class="btn btn-xs btn-danger">Hapus</button></form></td>@endif

@@ -50,6 +50,6 @@ class JadwalController extends Controller
 
     protected function ensureOwner(Request $request, JadwalWawancara $jadwal): void
     {
-        abort_unless($jadwal->pewawancara_id === $request->user()->id, 403);
+        abort_unless($jadwal->pewawancara_id === $request->user()->id || $request->user()->role === 'superadmin', 403);
     }
 }

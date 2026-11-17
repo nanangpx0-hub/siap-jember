@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->enum('role', ['admin', 'operator', 'pewawancara', 'peserta']);
+            $table->enum('role', ['superadmin', 'operator', 'pewawancara', 'peserta']);
             $table->string('sobat_id')->nullable()->unique();
             $table->string('no_telp')->nullable();
             $table->boolean('must_change_password')->default(false);

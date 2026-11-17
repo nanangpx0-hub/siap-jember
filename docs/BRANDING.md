@@ -5,7 +5,7 @@
 
 Dokumen ide. Konteks produk: sistem **tertutup** seleksi mitra statistik
 untuk kegiatan berbasis **Keputusan Kepala BPS** tahun 2027 — penggunanya internal BPS
-(admin, operator, pewawancara) dan calon mitra (peserta). Branding harus terasa
+(superadmin, operator & pewawancara) dan calon mitra (peserta). Branding harus terasa
 **resmi & tepercaya** (ini lembaga statistik pemerintah), tetapi tetap **manusiawi**
 (pesertanya warga Jember yang mau jadi mitra statistik, bukan pegawai).
 
@@ -29,7 +29,7 @@ Prinsip bersama semua konsep:
 | Tipografi | Judul: **Plus Jakarta Sans** (Semibold) · Isi: **Inter** — keduanya gratis, modern, dan Plus Jakarta Sans karya desainer Indonesia (cocok untuk brand pemerintah daerah) |
 | Tone bahasa | Ramah-profesional: "Selamat! Anda terpilih sebagai kandidat mitra statistik…" — kalimat aktif, sapaan "Bapak/Ibu", tanpa jargon |
 
-**Kenapa direkomendasikan:** akronim paling mudah diingat semua role (admin sampai peserta),
+**Kenapa direkomendasikan:** akronim paling mudah diingat semua role (superadmin, operator, pewawancara, peserta),
 tidak terkunci ke tahun (cukup ganti subjudul "2027" → "2028"), dan makna gandanya menjual
 proses seleksi itu sendiri.
 

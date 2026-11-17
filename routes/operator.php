@@ -5,10 +5,29 @@ use App\Http\Controllers\Operator\HasilController;
 use App\Http\Controllers\Operator\JadwalController;
 use App\Http\Controllers\Operator\MitraImportController;
 use App\Http\Controllers\Operator\TugasController;
+use App\Models\JadwalWawancara;
+use App\Models\Kegiatan;
+use App\Models\PesertaSeleksi;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'role:admin,operator'])->prefix('operator')->name('operator.')->group(function () {
-    Route::get('/dashboard', fn () => view('dashboards.operator'))->name('dashboard');
+Route::middleware(['auth', 'role:superadmin,operator'])->prefix('operator')->name('operator.')->group(function () {
+    Route::get('/dashboard', function () {
+        $kegiatanAktif = Kegiatan::where('is_active', true)->orderByDesc('tahun')->first();
+        $kegiatanId = $kegiatanAktif->id ?? null;
+
+        $totalMitra = User::where('role', 'peserta')->count();
+        $totalPeserta = $kegiatanId ? PesertaSeleksi::where('kegiatan_id', $kegiatanId)->count() : 0;
+        $totalRsvpHadir = $kegiatanId ? PesertaSeleksi::where('kegiatan_id', $kegiatanId)->where('status_undangan', 'hadir')->count() : 0;
+        $totalUploadCv = $kegiatanId ? PesertaSeleksi::where('kegiatan_id', $kegiatanId)->whereNotNull('cv_path')->count() : 0;
+        $totalJadwal = $kegiatanId ? JadwalWawancara::where('kegiatan_id', $kegiatanId)->count() : 0;
+        $totalDinilai = $kegiatanId ? JadwalWawancara::where('kegiatan_id', $kegiatanId)->whereHas('penilaian')->count() : 0;
+
+        return view('dashboards.operator', compact(
+            'totalMitra', 'kegiatanAktif', 'totalPeserta',
+            'totalRsvpHadir', 'totalUploadCv', 'totalJadwal', 'totalDinilai'
+        ));
+    })->name('dashboard');
 
     // Mitra (Track 2)
     Route::get('/mitra', [MitraImportController::class, 'index'])->name('mitra.index');
@@ -28,21 +47,27 @@ Route::middleware(['auth', 'role:admin,operator'])->prefix('operator')->name('op
     Route::post('/pengumuman/peserta/{peserta}/status', [HasilController::class, 'updateStatus'])->name('pengumuman.status');
     Route::post('/pengumuman/import-hasil', [HasilController::class, 'importHasil'])->name('pengumuman.import-hasil');
     Route::get('/pengumuman/template-hasil', [HasilController::class, 'templateHasil'])->name('pengumuman.template-hasil');
+    Route::get('/pengumuman/export-rekap', [HasilController::class, 'exportRekap'])->name('pengumuman.export-rekap');
 });
 
-// Akses bersama admin,operator,pewawancara (T4.1 view; aksi kelola dibatasi di controller)
-Route::middleware(['auth', 'role:admin,operator,pewawancara'])->group(function () {
+// Akses bersama superadmin, operator & pewawancara untuk /tugas; aksi kelola dibatasi di controller.
+Route::middleware(['auth', 'role:superadmin,operator,pewawancara'])->group(function () {
     Route::get('/tugas', [TugasController::class, 'index'])->name('tugas');
     // GET /jadwal kontrak ditangani dispatcher berbasis role di routes/web.php
 });
 
-Route::middleware(['auth', 'role:admin,operator'])->group(function () {
+Route::middleware(['auth', 'role:superadmin,operator'])->group(function () {
     // Tugas manage
     Route::post('/tugas', [TugasController::class, 'store'])->name('tugas.store');
     Route::delete('/tugas/{tugas}', [TugasController::class, 'destroy'])->name('tugas.destroy');
+    Route::post('/tugas/kegiatan', [TugasController::class, 'storeKegiatan'])->name('tugas.kegiatan.store');
+    Route::delete('/tugas/kegiatan/{kegiatan}', [TugasController::class, 'destroyKegiatan'])->name('tugas.kegiatan.destroy');
+    Route::post('/tugas/kegiatan/{kegiatan}/activate', [TugasController::class, 'activateKegiatan'])->name('tugas.kegiatan.activate');
     Route::post('/tugas/pewawancara', [TugasController::class, 'storePewawancara'])->name('tugas.pewawancara.store');
+    Route::post('/tugas/pewawancara/import', [TugasController::class, 'importPewawancara'])->name('tugas.pewawancara.import');
+    Route::get('/tugas/pewawancara/template', [TugasController::class, 'templatePewawancara'])->name('tugas.pewawancara.template');
 
-    // Jadwal manage (admin/operator)
+    // Jadwal manage (superadmin/operator)
     Route::post('/jadwal', [JadwalController::class, 'store'])->name('jadwal.store');
     Route::delete('/jadwal/{jadwal}', [JadwalController::class, 'destroy'])->name('jadwal.destroy');
     Route::post('/jadwal/import', [JadwalController::class, 'import'])->name('jadwal.import');

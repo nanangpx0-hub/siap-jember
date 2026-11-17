@@ -8,12 +8,20 @@
 
 <div class="card card-primary card-outline">
     <div class="card-body">
-        <form method="GET" action="{{ route('operator.pengumuman') }}" class="form-inline mb-3">
+        <form method="GET" action="{{ route('operator.pengumuman') }}" class="form-inline mb-3 flex-wrap">
             <label class="mr-2">Kegiatan</label>
-            <select name="kegiatan_id" class="form-control mr-2">
+            <select name="kegiatan_id" class="form-control mr-2 mb-1">
                 @foreach($kegiatanList as $k)<option value="{{ $k->id }}" @selected(($kegiatanId ?? 0)==$k->id)>{{ $k->nama_kegiatan }} ({{ $k->tahun }})</option>@endforeach
             </select>
-            <button class="btn btn-default">Tampilkan</button>
+            <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Cari nama/email/SOBAT..." class="form-control mr-2 mb-1">
+            <select name="status_hasil" class="form-control mr-2 mb-1">
+                <option value="">Semua Status</option>
+                @foreach(['belum_ditentukan' => 'Belum ditentukan', 'lulus' => 'Lulus', 'tidak_lulus' => 'Tidak lulus', 'cadangan' => 'Cadangan'] as $val => $label)
+                    <option value="{{ $val }}" @selected(($filters['status_hasil'] ?? '') === $val)>{{ $label }}</option>
+                @endforeach
+            </select>
+            <button class="btn btn-default mb-1">Tampilkan</button>
+            <a href="{{ route('operator.pengumuman.export-rekap', ['kegiatan_id' => $kegiatanId]) }}" class="btn btn-success mb-1 ml-2"><i class="fas fa-file-export mr-1"></i>Export Rekap Nilai (Excel)</a>
         </form>
         @if($kegiatan)
         <div class="d-flex flex-wrap align-items-center mb-3">

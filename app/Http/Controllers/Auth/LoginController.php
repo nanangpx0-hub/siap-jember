@@ -52,7 +52,7 @@ class LoginController extends Controller
     protected function redirectPathFor($user): string
     {
         return match ($user->role) {
-            'admin', 'operator' => '/operator/dashboard',
+            'superadmin', 'operator' => '/operator/dashboard',
             'pewawancara' => '/pewawancara/dashboard',
             'peserta' => '/peserta/dashboard',
             default => '/',

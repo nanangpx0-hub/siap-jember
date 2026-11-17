@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\MitraProfile;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -25,73 +26,97 @@ class MitraMasterImport implements ToCollection, WithHeadingRow
 
     public function collection(Collection $rows): void
     {
+        // Preload seluruh user existing dalam 1 query (bukan 2 query per baris).
+        $existingUsersByEmail = User::query()
+            ->get(['id', 'email', 'sobat_id', 'role', 'no_telp', 'password', 'must_change_password', 'is_active'])
+            ->keyBy(fn ($u) => strtolower($u->email));
+
+        $existingEmailBySobat = [];
+        foreach ($existingUsersByEmail as $emKey => $u) {
+            if ($u->sobat_id !== null && $u->sobat_id !== '') {
+                $existingEmailBySobat[(string) $u->sobat_id] = $emKey;
+            }
+        }
+
         $rowNum = 1; // heading
-        foreach ($rows as $row) {
-            $rowNum++;
-            $data = $this->normalizeRow($row->toArray());
-            $email = $data['email'];
-            $sobatId = $data['sobat_id'];
-            $name = $data['name'] ?: ($sobatId ?: 'Mitra');
+        foreach ($rows->chunk(250) as $chunk) {
+            DB::transaction(function () use ($chunk, &$rowNum, &$existingUsersByEmail, &$existingEmailBySobat) {
+                foreach ($chunk as $row) {
+                    $rowNum++;
+                    $data = $this->normalizeRow($row instanceof Collection ? $row->toArray() : (array) $row);
+                    $email = $data['email'];
+                    $sobatId = $data['sobat_id'];
+                    $name = $data['name'] ?: ($sobatId ?: 'Mitra');
 
-            if ($email === '') {
-                $this->summary['skipped']++;
-                $this->summary['errors'][] = "Baris {$rowNum}: email kosong (SOBAT ID: {$sobatId}).";
-                continue;
-            }
-            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $this->summary['skipped']++;
-                $this->summary['errors'][] = "Baris {$rowNum}: email tidak valid ({$email}).";
-                continue;
-            }
+                    if ($email === '') {
+                        $this->summary['skipped']++;
+                        $this->summary['errors'][] = "Baris {$rowNum}: email kosong (SOBAT ID: {$sobatId}).";
+                        continue;
+                    }
+                    if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                        $this->summary['skipped']++;
+                        $this->summary['errors'][] = "Baris {$rowNum}: email tidak valid ({$email}).";
+                        continue;
+                    }
 
-            $emailKey = strtolower($email);
-            if (isset($this->seenEmails[$emailKey])) {
-                $this->summary['skipped']++;
-                $this->summary['errors'][] = "Baris {$rowNum}: duplikat email dalam file ({$email}).";
-                continue;
-            }
-            $this->seenEmails[$emailKey] = $rowNum;
+                    $emailKey = strtolower($email);
+                    if (isset($this->seenEmails[$emailKey])) {
+                        $this->summary['skipped']++;
+                        $this->summary['errors'][] = "Baris {$rowNum}: duplikat email dalam file ({$email}).";
+                        continue;
+                    }
+                    $this->seenEmails[$emailKey] = $rowNum;
 
-            if ($sobatId !== '') {
-                if (isset($this->seenSobat[$sobatId])) {
-                    $this->summary['skipped']++;
-                    $this->summary['errors'][] = "Baris {$rowNum}: duplikat SOBAT ID dalam file ({$sobatId}).";
-                    continue;
+                    if ($sobatId !== '') {
+                        if (isset($this->seenSobat[$sobatId])) {
+                            $this->summary['skipped']++;
+                            $this->summary['errors'][] = "Baris {$rowNum}: duplikat SOBAT ID dalam file ({$sobatId}).";
+                            continue;
+                        }
+                        $this->seenSobat[$sobatId] = $rowNum;
+                    }
+
+                    // Cek konflik SOBAT ID dari cache memori (tanpa query SQL).
+                    if ($sobatId !== '' && isset($existingEmailBySobat[$sobatId]) && $existingEmailBySobat[$sobatId] !== $emailKey) {
+                        $this->summary['skipped']++;
+                        $this->summary['errors'][] = "Baris {$rowNum}: SOBAT ID {$sobatId} sudah dipakai user lain.";
+                        continue;
+                    }
+
+                    $existingByEmail = $existingUsersByEmail->get($emailKey);
+                    $isNew = ! $existingByEmail;
+                    $user = User::updateOrCreate(
+                        ['email' => $email],
+                        [
+                            'name' => $name,
+                            'role' => $existingByEmail ? $existingByEmail->role : 'peserta',
+                            'sobat_id' => $sobatId !== '' ? $sobatId : ($existingByEmail->sobat_id ?? null),
+                            'no_telp' => $data['no_telp'] !== '' ? $data['no_telp'] : ($existingByEmail->no_telp ?? null),
+                            'password' => $isNew
+                                ? Hash::make($sobatId !== '' ? $sobatId : 'password')
+                                : $existingByEmail->password,
+                            'must_change_password' => $isNew ? true : $existingByEmail->must_change_password,
+                            'is_active' => $existingByEmail ? $existingByEmail->is_active : true,
+                        ]
+                    );
+
+                    $profileData = $data['profile'];
+                    $profileData['user_id'] = $user->id;
+                    MitraProfile::updateOrCreate(['user_id' => $user->id], $profileData);
+
+                    // Perbarui cache memori agar baris berikutnya melihat perubahan chunk ini.
+                    $existingUsersByEmail->put($emailKey, $user);
+                    if ($user->sobat_id !== null && $user->sobat_id !== '') {
+                        $existingEmailBySobat[(string) $user->sobat_id] = $emailKey;
+                    }
+
+                    if ($isNew) {
+                        $this->summary['success']++;
+                    } else {
+                        $this->summary['updated']++;
+                    }
                 }
-                $this->seenSobat[$sobatId] = $rowNum;
-            }
-
-            $existingByEmail = User::where('email', $email)->first();
-            $existingBySobat = $sobatId !== '' ? User::where('sobat_id', $sobatId)->where('email', '!=', $email)->first() : null;
-            if ($existingBySobat) {
-                $this->summary['skipped']++;
-                $this->summary['errors'][] = "Baris {$rowNum}: SOBAT ID {$sobatId} sudah dipakai user lain.";
-                continue;
-            }
-
-            $isNew = ! $existingByEmail;
-            $user = User::updateOrCreate(
-                ['email' => $email],
-                [
-                    'name' => $name,
-                    'role' => $existingByEmail ? $existingByEmail->role : 'peserta',
-                    'sobat_id' => $sobatId !== '' ? $sobatId : ($existingByEmail->sobat_id ?? null),
-                    'no_telp' => $data['no_telp'] !== '' ? $data['no_telp'] : ($existingByEmail->no_telp ?? null),
-                    'password' => $existingByEmail ? $existingByEmail->password : Hash::make($sobatId !== '' ? $sobatId : 'password'),
-                    'must_change_password' => $isNew ? true : $existingByEmail->must_change_password,
-                    'is_active' => $existingByEmail ? $existingByEmail->is_active : true,
-                ]
-            );
-
-            $profileData = $data['profile'];
-            $profileData['user_id'] = $user->id;
-            MitraProfile::updateOrCreate(['user_id' => $user->id], $profileData);
-
-            if ($isNew) {
-                $this->summary['success']++;
-            } else {
-                $this->summary['updated']++;
-            }
+            });
         }
     }
 

@@ -54,8 +54,8 @@
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                     <li class="nav-item"><a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard','*.dashboard') ? 'active' : '' }}"><i class="nav-icon fas fa-tachometer-alt"></i><p>Dashboard</p></a></li>
 
-                    @if(in_array($role,['admin','operator']))
-                        <li class="nav-header">OPERATOR / ADMIN</li>
+                    @if(in_array($role,['superadmin','operator']))
+                        <li class="nav-header">SUPERADMIN / OPERATOR</li>
                         <li class="nav-item"><a href="{{ route('operator.mitra.index') }}" class="nav-link {{ request()->routeIs('operator.mitra.*') ? 'active' : '' }}"><i class="nav-icon fas fa-users"></i><p>Master Mitra & Seleksi</p></a></li>
                         <li class="nav-item"><a href="{{ route('tugas') }}" class="nav-link {{ request()->routeIs('tugas*') ? 'active' : '' }}"><i class="nav-icon fas fa-user-tie"></i><p>Alokasi Tugas</p></a></li>
                         <li class="nav-item"><a href="{{ route('jadwal') }}" class="nav-link {{ request()->is('jadwal*') ? 'active' : '' }}"><i class="nav-icon fas fa-calendar-alt"></i><p>Jadwal Wawancara</p></a></li>
@@ -67,6 +67,12 @@
                         <li class="nav-header">PEWAWANCARA</li>
                         <li class="nav-item"><a href="{{ route('tugas') }}" class="nav-link {{ request()->routeIs('tugas') ? 'active' : '' }}"><i class="nav-icon fas fa-tasks"></i><p>Alokasi Tugas</p></a></li>
                         <li class="nav-item"><a href="{{ route('jadwal') }}" class="nav-link {{ request()->is('jadwal') ? 'active' : '' }}"><i class="nav-icon fas fa-calendar-alt"></i><p>Jadwal Wawancara</p></a></li>
+                        <li class="nav-item"><a href="{{ route('pewawancara.dashboard') }}" class="nav-link {{ request()->routeIs('pewawancara.*') ? 'active' : '' }}"><i class="nav-icon fas fa-star-half-alt"></i><p>Penilaian Wawancara</p></a></li>
+                    @endif
+
+                    @if($role === 'superadmin')
+                        <li class="nav-header">PENILAIAN</li>
+                        <li class="nav-item"><a href="{{ route('pewawancara.dashboard') }}" class="nav-link {{ request()->routeIs('pewawancara.*') ? 'active' : '' }}"><i class="nav-icon fas fa-star-half-alt"></i><p>Penilaian Wawancara</p></a></li>
                     @endif
 
                     @if($role === 'peserta')

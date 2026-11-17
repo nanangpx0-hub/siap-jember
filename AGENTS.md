@@ -27,6 +27,6 @@ Dokumen ini menjadi aturan bersama untuk seluruh AI coding agent (**Antigravity,
 ## 3. Aturan Keamanan & Sistem Tertutup
 - **Tidak ada registrasi publik.** Route `/register` harus dinonaktifkan.
 - **Autentikasi:** Login menggunakan `email` (dari data SOBAT). Password awal mitra adalah `sobat_id`, dan `must_change_password = true` wajib memaksa user mengganti password saat login pertama.
-- **4 Role Resmi:** `admin`, `operator`, `pewawancara`, `peserta`. Gunakan middleware role di setiap group route.
+- **4 Role Resmi:** `superadmin` (akses penuh + override penilaian), `operator` (pengelola teknis: import/jadwal/hasil/penyelenggaraan; tidak menilai), `pewawancara` (penilai; hanya jadwal miliknya via `jadwal_wawancara.pewawancara_id`), `peserta` (calon mitra). Gunakan middleware role di setiap group route. Akun pewawancara dibuat oleh `superadmin`/`operator` melalui `/tugas`.
 - **File Privat:** CV peserta dan berkas penyelenggaraan (daftar hadir, dokumentasi, laporan) **wajib** disimpan di `storage/app/private/...` (bukan `public/`), dan hanya boleh diunduh melalui controller yang memverifikasi role & kepemilikan data.
 - **Validasi Input & Upload:** Selalu validasi MIME type, ekstensi, dan ukuran file pada setiap endpoint upload.

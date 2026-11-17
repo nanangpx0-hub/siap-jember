@@ -156,7 +156,7 @@ class WawancaraController extends Controller
             }
         });
 
-        $redirect = $request->user()->role === 'admin'
+        $redirect = $request->user()->role === 'superadmin'
             ? redirect()->route('jadwal')
             : redirect()->route('pewawancara.jadwal.show', $jadwal);
 
@@ -165,6 +165,6 @@ class WawancaraController extends Controller
 
     protected function ensureOwner(Request $request, JadwalWawancara $jadwal): void
     {
-        abort_unless($jadwal->pewawancara_id === $request->user()->id || $request->user()->role === 'admin', 403);
+        abort_unless($jadwal->pewawancara_id === $request->user()->id || $request->user()->role === 'superadmin', 403);
     }
 }

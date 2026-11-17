@@ -33,7 +33,7 @@ class AdministrasiController extends Controller
             'kegiatan_id' => ['required','exists:kegiatan,id'],
             'kategori' => ['required','in:daftar_hadir,dokumentasi,laporan_penyelenggaraan,sk_atau_surat,lainnya'],
             'judul' => ['required','string','max:255'],
-            'file' => ['required','file','max:20480'],
+            'file' => ['required', 'file', 'mimes:pdf,doc,docx,xls,xlsx,csv,ppt,pptx,jpg,jpeg,png,zip', 'max:20480'],
         ]);
         $file = $request->file('file');
         $path = $file->store('private/penyelenggaraan/'.$data['kegiatan_id'], 'local');
@@ -54,7 +54,7 @@ class AdministrasiController extends Controller
 
     public function destroy(Request $request, DokumenPenyelenggaraan $dokumen): RedirectResponse
     {
-        abort_unless(in_array($request->user()->role, ['admin','operator'], true), 403);
+        abort_unless(in_array($request->user()->role, ['superadmin','operator'], true), 403);
         if ($dokumen->file_path && Storage::disk('local')->exists($dokumen->file_path)) {
             Storage::disk('local')->delete($dokumen->file_path);
         }
@@ -64,7 +64,7 @@ class AdministrasiController extends Controller
 
     public function download(Request $request, DokumenPenyelenggaraan $dokumen): StreamedResponse
     {
-        abort_unless(in_array($request->user()->role, ['admin','operator'], true), 403);
+        abort_unless(in_array($request->user()->role, ['superadmin','operator'], true), 403);
         abort_unless($dokumen->file_path && Storage::disk('local')->exists($dokumen->file_path), 404);
         return Storage::disk('local')->download($dokumen->file_path, $dokumen->original_filename);
     }

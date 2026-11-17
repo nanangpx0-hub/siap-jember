@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-@php($backUrl = auth()->user()->role === 'admin' ? route('jadwal') : route('pewawancara.jadwal.show', $jadwal))
+@php($backUrl = auth()->user()->role === 'superadmin' ? route('jadwal') : route('pewawancara.jadwal.show', $jadwal))
 <div x-data="penilaianForm()">
     <div class="d-flex justify-content-between align-items-start mb-3">
         <div>
             <h3 class="mb-1">Input Nilai Wawancara</h3>
             <div class="text-muted">Peserta: <strong>{{ $jadwal->pesertaSeleksi->user->name ?? '-' }}</strong> ({{ $jadwal->pesertaSeleksi->user->sobat_id ?? '' }}) — {{ optional($jadwal->tanggal)->format('d M Y') }} {{ substr($jadwal->jam_mulai,0,5) }}-{{ substr($jadwal->jam_selesai,0,5) }}</div>
         </div>
-        <a href="{{ $backUrl }}" class="btn btn-default">{{ auth()->user()->role === 'admin' ? 'Kembali ke jadwal' : 'Kembali ke detail' }}</a>
+        <a href="{{ $backUrl }}" class="btn btn-default">{{ auth()->user()->role === 'superadmin' ? 'Kembali ke jadwal' : 'Kembali ke detail' }}</a>
     </div>
 
     <div class="card card-success card-outline">

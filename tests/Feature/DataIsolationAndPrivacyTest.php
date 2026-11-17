@@ -86,12 +86,13 @@ class DataIsolationAndPrivacyTest extends TestCase
         $this->actingAs($pw2)->get('/wawancara/'.$jadwalPw2->id)->assertOk();
     }
 
-    public function test_admin_can_access_and_score_wawancara_but_operator_cannot(): void
+    public function test_superadmin_can_score_any_jadwal_but_pewawancara_only_assigned(): void
     {
         $k = $this->seedKegiatan();
         $pw = $this->mkUser('pewawancara', 'pw-admin-test@example.com');
-        $admin = $this->mkUser('admin', 'adm@example.com');
-        $op = $this->mkUser('operator', 'op-deny@example.com');
+        $superadmin = $this->mkUser('superadmin', 'sadm@example.com');
+        $op = $this->mkUser('pewawancara', 'pw-deny@example.com');
+        $operator = $this->mkUser('operator', 'op-deny@example.com');
         $pesU = $this->mkUser('peserta', 'pes3@example.com');
         $ps = PesertaSeleksi::create(['kegiatan_id'=>$k->id,'user_id'=>$pesU->id]);
         $jadwal = JadwalWawancara::create([
@@ -99,19 +100,20 @@ class DataIsolationAndPrivacyTest extends TestCase
             'tanggal'=>'2027-05-02','jam_mulai'=>'09:00:00','jam_selesai'=>'09:30:00','metode'=>'luring','lokasi_atau_link'=>'Ruang 2'
         ]);
 
-        // operator ditolak (bukan pewawancara pemilik jadwal / admin)
+        // pewawancara non-pemilik & operator ditolak
         $this->actingAs($op)->get('/wawancara/'.$jadwal->id)->assertForbidden();
         $this->actingAs($op)->post('/wawancara/'.$jadwal->id, [])->assertForbidden();
+        $this->actingAs($operator)->get('/wawancara/'.$jadwal->id)->assertForbidden();
 
-        // admin (superuser) dapat membuka form & menyimpan penilaian
-        $this->actingAs($admin)->get('/wawancara/'.$jadwal->id)->assertOk();
-        $payload = ['rekomendasi' => 'direkomendasikan', 'catatan' => 'Input oleh admin'];
+        // superadmin dapat membuka form & menyimpan penilaian
+        $this->actingAs($superadmin)->get('/wawancara/'.$jadwal->id)->assertOk();
+        $payload = ['rekomendasi' => 'direkomendasikan', 'catatan' => 'Input oleh superadmin'];
         foreach (KriteriaPenilaian::where('kegiatan_id', $k->id)->get() as $kp) {
             $payload['skor'][$kp->id] = 80;
         }
-        $this->actingAs($admin)->post('/wawancara/'.$jadwal->id, $payload)->assertRedirect();
+        $this->actingAs($superadmin)->post('/wawancara/'.$jadwal->id, $payload)->assertRedirect();
 
-        // pewawancara_id tetap milik jadwal (tidak ditimpa id admin)
+        // pewawancara_id tetap milik jadwal (tidak ditimpa id superadmin)
         $this->assertDatabaseHas('penilaian_wawancara', [
             'jadwal_wawancara_id' => $jadwal->id,
             'pewawancara_id' => $pw->id,

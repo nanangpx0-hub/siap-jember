@@ -24,29 +24,33 @@ class PesertaTerpilihImport implements ToCollection, WithHeadingRow
         $rowNum = 1;
         foreach ($rows as $row) {
             $rowNum++;
-            $r = $row->toArray();
+            $r = $row instanceof Collection ? $row->toArray() : (array) $row;
             $get = function (array $keys) use ($r) {
                 foreach ($keys as $k) {
                     if (array_key_exists($k, $r) && $r[$k] !== null && $r[$k] !== '') {
-                        return is_string($r[$k]) ? trim($r[$k]) : (string) $r[$k];
+                        $value = is_string($r[$k]) ? trim($r[$k]) : (string) $r[$k];
+                        if ($value !== '') {
+                            return $value;
+                        }
                     }
                 }
                 return '';
             };
-            $sobat = $get(['sobat_id', 'sobatid', 'sobat']);
-            $email = strtolower($get(['email']));
 
-            $user = null;
-            if ($sobat !== '') {
-                $user = User::where('sobat_id', $sobat)->first();
+            // Cukup Email. Kolom SOBAT ID (jika masih ada di file lama) diabaikan.
+            $email = strtolower($get(['email', 'email_peserta', 'alamat_email']));
+
+            if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $this->summary['skipped']++;
+                $this->summary['errors'][] = "Baris {$rowNum}: Email kosong atau tidak valid.";
+                continue;
             }
-            if (! $user && $email !== '') {
-                $user = User::where('email', $email)->first();
-            }
+
+            $user = User::where('email', $email)->first();
 
             if (! $user) {
                 $this->summary['skipped']++;
-                $this->summary['errors'][] = "Baris {$rowNum}: mitra tidak ditemukan (SOBAT ID: {$sobat}, Email: {$email}).";
+                $this->summary['errors'][] = "Baris {$rowNum}: mitra dengan email {$email} tidak ditemukan.";
                 continue;
             }
 

@@ -13,11 +13,11 @@ Route::get('/', function () {
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
-    Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+    Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:10,1')->name('login.store');
     Route::get('/lupa-password', [ForgotPasswordController::class, 'create'])->name('password.request');
-    Route::post('/lupa-password', [ForgotPasswordController::class, 'store'])->name('password.email');
+    Route::post('/lupa-password', [ForgotPasswordController::class, 'store'])->middleware('throttle:5,1')->name('password.email');
     Route::get('/reset-password/{token}', [ResetPasswordController::class, 'create'])->name('password.reset');
-    Route::post('/reset-password', [ResetPasswordController::class, 'store'])->name('password.update');
+    Route::post('/reset-password', [ResetPasswordController::class, 'store'])->middleware('throttle:5,1')->name('password.update');
 });
 
 Route::middleware('auth')->group(function () {
@@ -28,7 +28,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         $user = request()->user();
         return match ($user->role) {
-            'admin', 'operator' => redirect('/operator/dashboard'),
+            'superadmin', 'operator' => redirect('/operator/dashboard'),
             'pewawancara' => redirect('/pewawancara/dashboard'),
             'peserta' => redirect('/peserta/dashboard'),
             default => abort(403),
@@ -39,7 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/jadwal', function (Request $request) {
         return match ($request->user()->role) {
             'peserta' => app()->call([app(\App\Http\Controllers\Peserta\JadwalController::class), 'index']),
-            'pewawancara', 'operator', 'admin' => app()->call([app(\App\Http\Controllers\Operator\JadwalController::class), 'index']),
+            'superadmin', 'operator', 'pewawancara' => app()->call([app(\App\Http\Controllers\Operator\JadwalController::class), 'index']),
             default => abort(403),
         };
     })->name('jadwal');
@@ -47,7 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/administrasi', function (Request $request) {
         return match ($request->user()->role) {
             'peserta' => app()->call([app(\App\Http\Controllers\Peserta\AdministrasiController::class), 'index']),
-            'operator', 'admin' => app()->call([app(\App\Http\Controllers\Operator\AdministrasiController::class), 'index']),
+            'superadmin', 'operator' => app()->call([app(\App\Http\Controllers\Operator\AdministrasiController::class), 'index']),
             default => abort(403),
         };
     })->name('administrasi');
@@ -55,7 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/pengumuman', function (Request $request) {
         return match ($request->user()->role) {
             'peserta' => app()->call([app(\App\Http\Controllers\Peserta\PengumumanController::class), 'index']),
-            'operator', 'admin' => app()->call([app(\App\Http\Controllers\Operator\HasilController::class), 'index']),
+            'superadmin', 'operator' => app()->call([app(\App\Http\Controllers\Operator\HasilController::class), 'index']),
             default => abort(403),
         };
     })->name('pengumuman');

@@ -86,7 +86,11 @@ php artisan view:cache
 # atau: php artisan optimize
 ```
 
-**Seed awal** (`db:seed`) membuat akun admin/operator, 1 kegiatan 2027 aktif, dan 4 kriteria penilaian default (lihat `database/seeders/DatabaseSeeder.php`). **Ganti password default** akun seed segera setelah login pertama di produksi.
+**Seed awal** (`db:seed`) membuat akun `admin@bpsjember.com` (`superadmin`) dan `operator@bpsjember.com` (`operator`), 1 kegiatan 2027 aktif, dan 4 kriteria penilaian default (lihat `database/seeders/DatabaseSeeder.php`). **Ganti password default** akun seed segera setelah login pertama di produksi.
+
+**Catatan migrasi RBAC (final: `superadmin`, `operator`, `pewawancara`, `peserta`):** jalankan `php artisan migrate --force` pada database produksi yang sudah ada; tidak perlu `migrate:fresh` (data peserta tetap utuh).
+- `2027_01_01_000130`: `admin`→`superadmin`, `operator`/`pewawancara`→`admin`.
+- `2027_01_01_000140`: `admin`→`operator`, role `pewawancara` dipulihkan. Dua akun pewawancara lama (`pewawancara.uji@bpsjember.com`, `nanangpx@gmail.com`) dikembalikan ke `role=pewawancara` dari snapshot `users_role_backup_20271117`.
 
 ## 7. .htaccess (Apache/cPanel)
 - File `public/.htaccess` sudah disertakan (standar Laravel): rewrite ke `index.php`, penanganan `Authorization` header, nonaktifkan `MultiViews/Indexes`, redirect trailing slash. Cocok untuk Apache 2.4 + `mod_rewrite` di cPanel.
@@ -101,7 +105,7 @@ php artisan view:cache
 
 ## 9. Verifikasi Pasca-Deploy
 - Akses `https://rekrutmen2027.bpsjember.com/login` (redirect `/` ke login).
-- Login akun seed, pastikan paksa ganti password (jika diberlakukan), cek role dashboard (`/operator/dashboard`, `/pewawancara/dashboard`, `/peserta/dashboard`).
-- Uji route kontrak: `/undangan`, `/jadwal`, `/administrasi`, `/pengumuman`, `/tugas` sesuai role.
+- Login akun seed, pastikan paksa ganti password (jika diberlakukan), cek role dashboard (`/operator/dashboard` untuk `superadmin`/`operator`, `/pewawancara/dashboard` untuk `pewawancara`, `/peserta/dashboard` untuk `peserta`).
+- Uji route kontrak: `/undangan`, `/jadwal`, `/administrasi`, `/pengumuman`, `/tugas` sesuai role (`peserta` vs staf). Verifikasi akun `peserta` hasil import tetap bisa login dan `users.role`-nya masih `peserta`.
 - Uji kirim email reset password via SMTP `@bpsjember.com`.
 - Konfirmasi `APP_DEBUG=false` dan halaman error tidak menampilkan stack trace.
