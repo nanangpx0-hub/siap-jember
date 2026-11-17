@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview Branding — Rekrutmen BPS Jember</title>
+<style>
+  :root {
+    --navy: #0A4D8C;
+    --blue: #1E88E5;
+    --amber: #FFB300;
+    --green: #2E7D46;
+    --ink: #1F2937;
+    --bg: #F5F7FA;
+    --card: #FFFFFF;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--ink); padding: 32px 20px 80px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  header.top { text-align: center; margin-bottom: 40px; }
+  header.top h1 { font-size: 26px; font-weight: 700; color: var(--navy); }
+  header.top p { color: #5B6B7C; margin-top: 6px; font-size: 14px; }
+  .concept {
+    background: var(--card); border-radius: var(--radius); padding: 28px;
+    box-shadow: 0 6px 24px rgba(10,77,140,.08); margin-bottom: 36px; border-top: 6px solid var(--navy);
+  }
+  .concept.b { border-top-color: var(--green); }
+  .concept.c { border-top-color: #37474F; }
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; background: var(--amber); color: #4A3200;
+    border-radius: 999px; padding: 3px 10px; margin-bottom: 10px;
+  }
+  .concept h2 { font-size: 22px; font-weight: 700; color: var(--navy); }
+  .concept h2 small { font-weight: 500; color: #5B6B7C; font-size: 13px; display: block; margin-top: 2px; }
+  .grid { display: grid; grid-template-columns: 200px 1fr; gap: 24px; margin-top: 20px; align-items: start; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  .logo-box { background: #F8FAFD; border: 1px dashed #C9D6E4; border-radius: 12px; padding: 18px; text-align: center; }
+  .logo-box svg { width: 120px; height: 120px; }
+  .logo-box .lname { margin-top: 10px; font-weight: 700; font-size: 16px; color: var(--navy); }
+  .logo-box .lsub { font-size: 11px; color: #5B6B7C; }
+  .tagline { font-size: 17px; font-weight: 600; margin-bottom: 14px; }
+  .tagline em { color: var(--blue); font-style: normal; }
+  .meta { font-size: 13.5px; color: #3D4B5A; line-height: 1.65; }
+  .meta b { color: var(--ink); }
+  .swatches { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .sw { width: 92px; border-radius: 10px; overflow: hidden; font-size: 11px; box-shadow: 0 2px 8px rgba(0,0,0,.08); background: #fff; }
+  .sw .c { height: 46px; }
+  .sw .l { padding: 6px 8px; color: #37474F; }
+  .sw .l b { display: block; font-size: 10.5px; }
+  .type-sample { margin-top: 14px; background: #F8FAFD; border-radius: 10px; padding: 14px; }
+  .type-sample .t1 { font-size: 20px; font-weight: 700; }
+  .type-sample .t2 { font-size: 13.5px; color: #3D4B5A; margin-top: 4px; }
+  .login-mock {
+    margin-top: 22px; background: linear-gradient(135deg, var(--navy) 0%, #083A6B 100%);
+    border-radius: 12px; padding: 26px; display: flex; justify-content: center;
+  }
+  .login-card {
+    background: #fff; border-radius: 12px; padding: 24px 22px; width: 320px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25); text-align: center;
+  }
+  .login-card svg { width: 56px; height: 56px; }
+  .login-card .app { font-weight: 700; font-size: 18px; color: var(--navy); margin-top: 8px; }
+  .login-card .app b { font-weight: 800; }
+  .login-card .tl { font-size: 12px; color: #5B6B7C; margin-bottom: 4px; }
+  .login-card .closed {
+    font-size: 11px; color: #7A5A00; background: #FFF4D6; border: 1px solid #F2DE9B;
+    border-radius: 8px; padding: 6px 8px; margin: 10px 0 14px;
+  }
+  .field { display: flex; align-items: center; border: 1px solid #D4DEE9; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+  .field input { border: 0; outline: none; padding: 10px 12px; font-size: 13px; width: 100%; }
+  .field .ic { padding: 0 12px; color: #9AA9B8; font-size: 13px; }
+  .btn { background: var(--blue); color: #fff; border: 0; border-radius: 8px; padding: 10px; width: 100%; font-weight: 700; font-size: 14px; }
+  .btn.amber { background: var(--amber); color: #4A3200; }
+  .foot { text-align: center; color: #8093A6; font-size: 12px; margin-top: 26px; }
+  .foot b { color: var(--navy); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>Preview Branding — Portal Rekrutmen Mitra Statistik</h1>
+    <p>BPS Kabupaten Jember · Keputusan Kepala BPS 2027 · 3 arah konsep (lihat docs/BRANDING.md)</p>
+  </header>
+
+  <!-- ============ KONSEP A ============ -->
+  <section class="concept a">
+    <span class="badge">Konsep A · Direkomendasikan</span>
+    <h2>SIAP Jember <small>Sistem Informasi Administrasi &amp; Penilaian — Mitra Statistik</small></h2>
+    <div class="grid">
+      <div class="logo-box">
+        <svg viewBox="0 0 120 120" role="img" aria-label="Logo SIAP Jember">
+          <rect x="10" y="10" width="100" height="100" rx="24" fill="#0A4D8C"/>
+          <rect x="30" y="66" width="14" height="24" rx="3" fill="#9EC7F0"/>
+          <rect x="52" y="50" width="14" height="40" rx="3" fill="#E3F0FB"/>
+          <path d="M74 74 L84 84 L102 62" fill="none" stroke="#FFB300" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="lname">SIAP</div>
+        <div class="lsub">Jember 2027</div>
+      </div>
+      <div>
+        <div class="tagline">"Siap Menjadi <em>Mitra Statistik Terbaik</em>"</div>
+        <div class="meta">
+          <b>Logo:</b> tiga batang naik (tahap seleksi: administrasi → wawancara → hasil) berujung centang amber (kelulusan), di atas ubin perisai navy = sistem tertutup.<br>
+          <b>Makna ganda:</b> sistem yang <b>SIAP</b> (terverifikasi, aman) &amp; peserta yang <b>siap</b> tugas lapangan. Tidak terkunci tahun — cukup ganti subjudul.
+        </div>
+        <div class="swatches">
+          <div class="sw"><div class="c" style="background:#0A4D8C"></div><div class="l"><b>Navy BPS</b>#0A4D8C</div></div>
+          <div class="sw"><div class="c" style="background:#1E88E5"></div><div class="l"><b>Biru Aksi</b>#1E88E5</div></div>
+          <div class="sw"><div class="c" style="background:#FFB300"></div><div class="l"><b>Amber Hasil</b>#FFB300</div></div>
+          <div class="sw"><div class="c" style="background:#F5F7FA; border-bottom:1px solid #E3E9F0"></div><div class="l"><b>Latar</b>#F5F7FA</div></div>
+        </div>
+        <div class="type-sample">
+          <div class="t1">Plus Jakarta Sans — Judul</div>
+          <div class="t2">Inter untuk teks isi. "Selamat! Bapak/Ibu terpilih sebagai kandidat mitra statistik kegiatan 2027."</div>
+        </div>
+      </div>
+    </div>
+    <div class="login-mock">
+      <div class="login-card">
+        <svg viewBox="0 0 120 120"><rect x="10" y="10" width="100" height="100" rx="24" fill="#0A4D8C"/><rect x="30" y="66" width="14" height="24" rx="3" fill="#9EC7F0"/><rect x="52" y="50" width="14" height="40" rx="3" fill="#E3F0FB"/><path d="M74 74 L84 84 L102 62" fill="none" stroke="#FFB300" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="app">SIAP <b>Jember</b></div>
+        <div class="tl">Siap Menjadi Mitra Statistik Terbaik</div>
+        <div class="closed">Portal tertutup — akses hanya untuk peserta &amp; panitia terdaftar</div>
+        <div class="field"><input type="email" placeholder="Email terdaftar"><span class="ic">✉</span></div>
+        <div class="field"><input type="password" placeholder="Password"><span class="ic">🔒</span></div>
+        <button class="btn">Masuk</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KONSEP B ============ -->
+  <section class="concept b">
+    <span class="badge" style="background:#DDF0E3; color:#1E5631">Konsep B · Manusiawi &amp; khas Jember</span>
+    <h2>SIMPATI 2027 <small>Sistem Informasi Mitra Terpilih</small></h2>
+    <div class="grid">
+      <div class="logo-box">
+        <svg viewBox="0 0 120 120" role="img" aria-label="Logo SIMPATI 2027">
+          <rect x="10" y="10" width="100" height="100" rx="50" fill="#0A4D8C"/>
+          <g fill="#BFE3CD">
+            <circle cx="60" cy="30" r="6"/><circle cx="45" cy="40" r="6"/><circle cx="75" cy="40" r="6"/>
+            <circle cx="38" cy="56" r="6"/><circle cx="82" cy="56" r="6"/>
+            <circle cx="42" cy="74" r="6"/><circle cx="78" cy="74" r="6"/>
+            <circle cx="52" cy="88" r="6"/><circle cx="68" cy="88" r="6"/>
+          </g>
+          <circle cx="60" cy="60" r="11" fill="#2E7D46"/>
+          <circle cx="60" cy="60" r="5" fill="#FFB300"/>
+        </svg>
+        <div class="lname">SIMPATI</div>
+        <div class="lsub">Mitra Terpilih · 2027</div>
+      </div>
+      <div>
+        <div class="tagline">"Dari Data, <em>Untuk Jember</em>"</div>
+        <div class="meta">
+          <b>Logo:</b> sidik jari dari titik-titik data — setiap mitra adalah manusia unik yang tercatat akurat; inti hijau tembakau + titik amber = terpilih di antara data.<br>
+          <b>Karakter:</b> paling hangat &amp; menenangkan peserta; hijau tembakau memberi identitas lokal Jember.
+        </div>
+        <div class="swatches">
+          <div class="sw"><div class="c" style="background:#0A4D8C"></div><div class="l"><b>Navy BPS</b>#0A4D8C</div></div>
+          <div class="sw"><div class="c" style="background:#2E7D46"></div><div class="l"><b>Hijau Tembakau</b>#2E7D46</div></div>
+          <div class="sw"><div class="c" style="background:#FFB300"></div><div class="l"><b>Amber Titik</b>#FFB300</div></div>
+          <div class="sw"><div class="c" style="background:#FAFAF7; border-bottom:1px solid #E8E6DC"></div><div class="l"><b>Krem Hangat</b>#FAFAF7</div></div>
+        </div>
+        <div class="type-sample">
+          <div class="t1">Plus Jakarta Sans — Judul</div>
+          <div class="t2">"Jangan khawatir — wawancara Anda bersama tim panitia yang ramah. Siapkan cerita pengalaman Anda."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KONSEP C ============ -->
+  <section class="concept c">
+    <span class="badge" style="background:#E7ECEF; color:#37474F">Konsep C · Konservatif instansi</span>
+    <h2>SIMREK 27 <small>Sistem Rekrutmen — BPS Kabupaten Jember</small></h2>
+    <div class="grid">
+      <div class="logo-box">
+        <svg viewBox="0 0 120 120" role="img" aria-label="Logo SIMREK 27">
+          <path d="M60 10 L102 26 V64 C102 88 82 102 60 110 C38 102 18 88 18 64 V26 Z" fill="#0A3D7C"/>
+          <path d="M38 78 L54 58 L66 68 L84 44" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="84" cy="44" r="5" fill="#FFB300"/>
+        </svg>
+        <div class="lname">SIMREK</div>
+        <div class="lsub">BPS Kab. Jember</div>
+      </div>
+      <div>
+        <div class="tagline" style="font-size:15px">"Seleksi Mitra Statistik yang Akuntabel dan Transparan"</div>
+        <div class="meta">
+          <b>Logo:</b> perisai (sistem tertutup) + garis tren naik putih — satu warna dominan, aman dicetak kop hitam-putih.<br>
+          <b>Karakter:</b> paling formal, paling mudah disetujui pimpinan; tanpa warna cerah, tanpa ganti font (tetap Source Sans Pro bawaan AdminLTE).
+        </div>
+        <div class="swatches">
+          <div class="sw"><div class="c" style="background:#0A3D7C"></div><div class="l"><b>Navy Tua</b>#0A3D7C</div></div>
+          <div class="sw"><div class="c" style="background:#37474F"></div><div class="l"><b>Netral Baja</b>#37474F</div></div>
+          <div class="sw"><div class="c" style="background:#1E88E5"></div><div class="l"><b>Aksen Tipis</b>#1E88E5</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">Pratinjau ide branding — status: <b>belum final</b>. Pilih satu arah di <b>docs/BRANDING.md</b>, lalu diimplementasikan ke APP_NAME, sidebar, login, dan email.</div>
+</div>
+</body>
+</html>
